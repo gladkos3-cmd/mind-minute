@@ -100,7 +100,7 @@ export const PRACTICES: PracticeDefinition[] = [
     title: "Box breathing (4–4–4–4)",
     groupId: "focus-reset",
     modes: ["focus"],
-    durationsSec: [60, 90, 180],
+    durationsSec: [60, 90, 180, 360],
     breath: [
       { phase: "inhale", sec: 4 },
       { phase: "hold", sec: 4 },
@@ -116,7 +116,7 @@ export const PRACTICES: PracticeDefinition[] = [
     title: "Ровный ритм (5–0–5)",
     groupId: "focus-reset",
     modes: ["focus", "calm"],
-    durationsSec: [90, 180],
+    durationsSec: [90, 180, 360],
     breath: [
       { phase: "inhale", sec: 5 },
       { phase: "exhale", sec: 5 },
@@ -130,7 +130,7 @@ export const PRACTICES: PracticeDefinition[] = [
     title: "Сон: 4–7–8 (мягко)",
     groupId: "sleep-downshift",
     modes: ["sleep", "calm"],
-    durationsSec: [90, 180],
+    durationsSec: [90, 180, 600],
     breath: [
       { phase: "inhale", sec: 4 },
       { phase: "hold", sec: 7 },
@@ -145,7 +145,7 @@ export const PRACTICES: PracticeDefinition[] = [
     title: "Сон: 3–0–6 (очень мягко)",
     groupId: "sleep-downshift",
     modes: ["sleep"],
-    durationsSec: [60, 90, 180],
+    durationsSec: [60, 90, 180, 600],
     breath: [
       { phase: "inhale", sec: 3 },
       { phase: "exhale", sec: 6 },
@@ -173,7 +173,7 @@ export const PRACTICES: PracticeDefinition[] = [
     title: "Лёгкая энергия (2–2–2–6)",
     groupId: "energy-light",
     modes: ["focus"],
-    durationsSec: [60, 90],
+    durationsSec: [60, 90, 360],
     breath: [
       { phase: "inhale", sec: 2 },
       { phase: "hold", sec: 2 },

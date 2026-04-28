@@ -8,6 +8,7 @@ type Playing = {
 
 let current: Playing | null = null;
 let playSeq = 0;
+const bufferCache = new Map<string, Promise<AudioBuffer>>();
 
 function createNoiseBuffer(ctx: AudioContext, seconds: number) {
   const sampleRate = ctx.sampleRate;
@@ -33,9 +34,42 @@ function fade(gain: GainNode, to: number, ms: number) {
 }
 
 async function loadAudioBuffer(ctx: AudioContext, url: string): Promise<AudioBuffer> {
-  const res = await fetch(url);
-  const arr = await res.arrayBuffer();
-  return await ctx.decodeAudioData(arr);
+  const cached = bufferCache.get(url);
+  if (cached) return await cached;
+  const p = (async () => {
+    const res = await fetch(url);
+    const arr = await res.arrayBuffer();
+    return await ctx.decodeAudioData(arr);
+  })();
+  bufferCache.set(url, p);
+  return await p;
+}
+
+function mp3UrlFor(profile: SoundProfile): string | null {
+  switch (profile.kind) {
+    case "ocean":
+      return "/sounds/ocean.mp3";
+    case "rain":
+      return "/sounds/rain.mp3";
+    case "wind":
+      return "/sounds/wind.mp3";
+    case "forest":
+      return "/sounds/forest.mp3";
+    case "birds":
+      return "/sounds/birds.mp3";
+    case "stream":
+      return "/sounds/stream.mp3";
+    case "fire":
+      return "/sounds/fire.mp3";
+    case "space":
+      return "/sounds/space.mp3";
+    case "whiteNoise":
+      return "/sounds/white.mp3";
+    case "pinkNoise":
+      return "/sounds/pink.mp3";
+    default:
+      return null;
+  }
 }
 
 export function stopSound() {
@@ -111,26 +145,32 @@ export async function startSound(profile: SoundProfile, volume01: number) {
 
   const makeNoise = () => createLoopingNoise(ctx);
 
-  if (profile.kind === "rain") {
-    // Prefer real mp3 loop if present.
+  // Prefer real MP3 ambience loops when available.
+  const url = mp3UrlFor(profile);
+  if (url) {
     try {
-      const buffer = await loadAudioBuffer(ctx, "/sounds/rain.mp3");
-      // If we were stopped while loading, abort.
+      const buffer = await loadAudioBuffer(ctx, url);
       if (seq !== playSeq || current?.ctx !== ctx) return;
 
       const src = ctx.createBufferSource();
       src.buffer = buffer;
       src.loop = true;
+
       const g = ctx.createGain();
-      g.gain.value = (0.25 + intensity * 0.35) * v;
+      g.gain.value = (0.18 + intensity * 0.22) * v;
+
       src.connect(g).connect(master);
       src.start();
       nodesToStop.push({ stop: () => src.stop(), disconnect: () => src.disconnect() });
       fade(master, 1, 350);
       return;
     } catch {
-      // Fall back to synthesized rain below.
+      // fall back to synthesized implementations below
     }
+  }
+
+  if (profile.kind === "rain") {
+    // Synth fallback (should rarely be used now).
   }
 
   if (profile.kind === "tone") {
@@ -385,5 +425,48 @@ export async function startSound(profile: SoundProfile, volume01: number) {
   }
 
   fade(master, 1, 400);
+}
+
+export async function playChime(which: "start" | "end") {
+  const ctx = new AudioContext();
+  try {
+    await ctx.resume();
+  } catch {
+    // ignore
+  }
+  const out = ctx.createGain();
+  out.gain.value = 0.0001;
+  out.connect(ctx.destination);
+
+  const now = ctx.currentTime;
+  const base = which === "start" ? 523.25 : 440; // C5 vs A4
+  const osc1 = ctx.createOscillator();
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(base, now);
+  const osc2 = ctx.createOscillator();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(base * 1.5, now);
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+
+  osc1.connect(g);
+  osc2.connect(g);
+  g.connect(out);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 1.0);
+  osc2.stop(now + 1.0);
+
+  window.setTimeout(() => {
+    try {
+      void ctx.close();
+    } catch {
+      // ignore
+    }
+  }, 1100);
 }
 

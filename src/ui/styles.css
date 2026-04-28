@@ -139,6 +139,21 @@ a{color:inherit;text-decoration:none}
 
 .orb{margin:14px auto 6px; width:180px; height:180px; border-radius:999px; border:1px solid var(--stroke); background:radial-gradient(circle at 30% 30%, rgba(110,231,255,.35), rgba(167,139,250,.14) 55%, rgba(255,255,255,.03) 75%); display:grid; place-items:center; box-shadow:var(--shadow); transform:scale(.92); transition:transform 900ms ease}
 .orbText{font-weight:900; letter-spacing:.2px}
+.orbMeditator{
+  position:absolute;
+  width:180px;
+  height:180px;
+  display:grid;
+  place-items:center;
+  pointer-events:none;
+}
+.orbMeditatorIcon{
+  width:56px;
+  height:56px;
+  color: rgba(233,238,247,.35);
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+}
+.orb{position:relative}
 .orb-inhale{transform:scale(1.02)}
 .orb-hold{transform:scale(1.02)}
 .orb-exhale{transform:scale(.86)}

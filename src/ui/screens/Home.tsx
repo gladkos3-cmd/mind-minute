@@ -4,11 +4,14 @@ import { recommendPractices } from "../../content/recommend";
 import type { PracticeMode } from "../../content/practices";
 import type { SessionRecord } from "../../lib/storage";
 
-const DURATIONS: Array<{ label: string; sec: number }> = [
+const DURATIONS_BASE: Array<{ label: string; sec: number }> = [
   { label: "30 сек", sec: 30 },
   { label: "90 сек", sec: 90 },
   { label: "3 мин", sec: 180 },
 ];
+
+const DURATION_FOCUS_6MIN = { label: "6 мин", sec: 360 } as const;
+const DURATION_SLEEP_10MIN = { label: "10 мин", sec: 600 } as const;
 
 const MODES: Array<{ id: PracticeMode; title: string; hint: string }> = [
   { id: "calm", title: "Успокоиться", hint: "снять напряжение" },
@@ -31,7 +34,11 @@ export function Home(props: {
   const [beforeValue, setBeforeValue] = useState(7);
   const [selectedDuration, setSelectedDuration] = useState(90);
   const [mode, setMode] = useState<PracticeMode>("calm");
-  const durations = useMemo(() => DURATIONS, []);
+  const durations = useMemo(() => {
+    if (mode === "sleep") return [...DURATIONS_BASE, DURATION_SLEEP_10MIN];
+    if (mode === "focus") return [...DURATIONS_BASE, DURATION_FOCUS_6MIN];
+    return DURATIONS_BASE;
+  }, [mode]);
   const recommended = useMemo(() => recommendPractices({ mode, before: beforeValue, now: new Date() }, 5), [mode, beforeValue]);
 
   return (

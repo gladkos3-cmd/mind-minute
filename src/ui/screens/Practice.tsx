@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { BreathPhase, PracticeDefinition } from "../../content/practices";
-import { startSound, stopSound } from "../../lib/audio";
+import { playChime, startSound, stopSound } from "../../lib/audio";
 import { hapticLight } from "../../lib/telegram";
 
 type SoundChoiceId =
@@ -44,6 +44,7 @@ export function Practice(props: {
 
   useEffect(() => {
     started.current = Date.now();
+    void playChime("start");
     const timer = window.setInterval(() => {
       setT((prev) => {
         if (prev <= 1) {
@@ -104,13 +105,20 @@ export function Practice(props: {
   }, [soundChoice]);
 
   useEffect(() => {
-    if (selectedSoundProfile.kind === "none" || t === 0) {
+    if (selectedSoundProfile.kind === "none") {
       stopSound();
       return;
     }
     void startSound(selectedSoundProfile, volume);
     return () => stopSound();
-  }, [selectedSoundProfile, volume, t]);
+  }, [selectedSoundProfile, volume]);
+
+  useEffect(() => {
+    if (t === 0) {
+      stopSound();
+      void playChime("end");
+    }
+  }, [t]);
 
   return (
     <div className="app">
@@ -129,6 +137,9 @@ export function Practice(props: {
         <section className="card">
           <div className="practiceInstruction">{practice.instruction}</div>
           <div className={`orb orb-${phase}`}>
+            <div className="orbMeditator" aria-hidden="true">
+              <IconMeditator className="orbMeditatorIcon" />
+            </div>
             <div className="orbText">{labelPhase(phase)}</div>
           </div>
           <div className="practiceNote mtSmall">Если хочется — просто наблюдай дыхание, без оценок.</div>
@@ -331,6 +342,45 @@ function IconNoise(p: { className?: string }) {
       <path d="M13 15V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity=".8" />
       <path d="M17 19V5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity=".7" />
       <path d="M21 16V8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity=".6" />
+    </svg>
+  );
+}
+
+function IconMeditator(p: { className?: string }) {
+  return (
+    <svg className={p.className} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 6.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M7.2 11.2c1.2-1.9 2.7-2.9 4.8-2.9s3.6 1 4.8 2.9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6.2 18.6c1.6-1.6 3.6-2.4 5.8-2.4s4.2.8 5.8 2.4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        opacity=".85"
+      />
+      <path
+        d="M9.1 13.1c-.9 1.1-1.4 2.3-1.6 3.8"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        opacity=".75"
+      />
+      <path
+        d="M14.9 13.1c.9 1.1 1.4 2.3 1.6 3.8"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        opacity=".75"
+      />
     </svg>
   );
 }
