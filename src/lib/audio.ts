@@ -197,6 +197,57 @@ export async function startSound(profile: SoundProfile, volume01: number) {
   const url = mp3UrlFor(profile);
   if (url) {
     try {
+      // iOS Safari can be picky about decodeAudioData() for some MP3 encodings.
+      // Prefer an <audio> element routed into WebAudio when possible.
+      const el = new Audio(url);
+      el.loop = true;
+      el.preload = "auto";
+      try {
+        (el as HTMLMediaElement).crossOrigin = "anonymous";
+      } catch {
+        // ignore
+      }
+
+      const media = ctx.createMediaElementSource(el);
+      const g = ctx.createGain();
+      g.gain.value = (0.18 + intensity * 0.22) * v;
+      media.connect(g).connect(master);
+
+      try {
+        await el.play();
+      } catch {
+        // If autoplay is blocked, we'll fall back below.
+        try {
+          media.disconnect();
+        } catch {
+          // ignore
+        }
+        throw new Error("media-play-blocked");
+      }
+
+      nodesToStop.push({
+        stop: () => {
+          try {
+            el.pause();
+          } catch {
+            // ignore
+          }
+        },
+        disconnect: () => {
+          try {
+            media.disconnect();
+          } catch {
+            // ignore
+          }
+        },
+      });
+      fade(master, 1, 350);
+      return;
+    } catch {
+      // Fall through to buffer decode / synth fallback.
+    }
+
+    try {
       const buffer = await loadAudioBuffer(ctx, url);
       if (seq !== playSeq || current?.ctx !== ctx) return;
 
