@@ -15,10 +15,44 @@ type Playing = {
 let current: Playing | null = null;
 let playSeq = 0;
 const bufferCache = new Map<string, Promise<AudioBuffer>>();
+let sharedCtx: AudioContext | null = null;
+let sharedOut: GainNode | null = null;
 
 function createAudioContext(): AudioContext {
   const Ctx = window.AudioContext ?? window.webkitAudioContext;
   return new Ctx();
+}
+
+function getSharedAudio() {
+  if (!sharedCtx) {
+    sharedCtx = createAudioContext();
+    sharedOut = sharedCtx.createGain();
+    sharedOut.gain.value = 1;
+    sharedOut.connect(sharedCtx.destination);
+  }
+  return { ctx: sharedCtx, out: sharedOut! };
+}
+
+export async function unlockAudio() {
+  const { ctx, out } = getSharedAudio();
+  try {
+    await ctx.resume();
+  } catch {
+    // ignore
+  }
+  // iOS sometimes needs an actual sound scheduled from a gesture.
+  try {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    g.gain.value = 0.0001;
+    osc.frequency.value = 440;
+    osc.connect(g).connect(out);
+    const t = ctx.currentTime;
+    osc.start(t);
+    osc.stop(t + 0.02);
+  } catch {
+    // ignore
+  }
 }
 
 function createNoiseBuffer(ctx: AudioContext, seconds: number) {
@@ -92,7 +126,11 @@ export function stopSound() {
     window.setTimeout(() => {
       try {
         prev.stop();
-        void prev.ctx.close();
+        try {
+          prev.master.disconnect();
+        } catch {
+          // ignore
+        }
       } catch {
         // ignore
       }
@@ -107,10 +145,10 @@ export async function startSound(profile: SoundProfile, volume01: number) {
   if (profile.kind === "none") return;
 
   const seq = ++playSeq;
-  const ctx = createAudioContext();
+  const { ctx, out } = getSharedAudio();
   const master = ctx.createGain();
   master.gain.value = 0;
-  master.connect(ctx.destination);
+  master.connect(out);
 
   const nodesToStop: Array<{ stop?: () => void; disconnect?: () => void }> = [];
 
@@ -439,15 +477,15 @@ export async function startSound(profile: SoundProfile, volume01: number) {
 }
 
 export async function playChime(which: "start" | "end") {
-  const ctx = createAudioContext();
+  const { ctx, out } = getSharedAudio();
   try {
     await ctx.resume();
   } catch {
     // ignore
   }
-  const out = ctx.createGain();
-  out.gain.value = 0.0001;
-  out.connect(ctx.destination);
+  const chimeOut = ctx.createGain();
+  chimeOut.gain.value = 0.0001;
+  chimeOut.connect(out);
 
   const now = ctx.currentTime;
   const base = which === "start" ? 523.25 : 440; // C5 vs A4
@@ -465,7 +503,7 @@ export async function playChime(which: "start" | "end") {
 
   osc1.connect(g);
   osc2.connect(g);
-  g.connect(out);
+  g.connect(chimeOut);
 
   osc1.start(now);
   osc2.start(now);
@@ -473,11 +511,7 @@ export async function playChime(which: "start" | "end") {
   osc2.stop(now + 1.0);
 
   window.setTimeout(() => {
-    try {
-      void ctx.close();
-    } catch {
-      // ignore
-    }
+    // shared context stays alive
   }, 1100);
 }
 
