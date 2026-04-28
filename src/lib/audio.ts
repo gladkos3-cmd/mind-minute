@@ -32,6 +32,12 @@ function fade(gain: GainNode, to: number, ms: number) {
   gain.gain.linearRampToValueAtTime(to, t + ms / 1000);
 }
 
+async function loadAudioBuffer(ctx: AudioContext, url: string): Promise<AudioBuffer> {
+  const res = await fetch(url);
+  const arr = await res.arrayBuffer();
+  return await ctx.decodeAudioData(arr);
+}
+
 export function stopSound() {
   if (!current) return;
   const prev = current;
@@ -104,6 +110,28 @@ export async function startSound(profile: SoundProfile, volume01: number) {
   const intensity = "intensity" in profile && typeof profile.intensity === "number" ? profile.intensity : 0.5;
 
   const makeNoise = () => createLoopingNoise(ctx);
+
+  if (profile.kind === "rain") {
+    // Prefer real mp3 loop if present.
+    try {
+      const buffer = await loadAudioBuffer(ctx, "/sounds/rain.mp3");
+      // If we were stopped while loading, abort.
+      if (seq !== playSeq || current?.ctx !== ctx) return;
+
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+      const g = ctx.createGain();
+      g.gain.value = (0.25 + intensity * 0.35) * v;
+      src.connect(g).connect(master);
+      src.start();
+      nodesToStop.push({ stop: () => src.stop(), disconnect: () => src.disconnect() });
+      fade(master, 1, 350);
+      return;
+    } catch {
+      // Fall back to synthesized rain below.
+    }
+  }
 
   if (profile.kind === "tone") {
     const osc = ctx.createOscillator();
