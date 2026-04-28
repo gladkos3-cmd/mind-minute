@@ -38,18 +38,10 @@ export function Practice(props: {
   });
   const started = useRef<number | null>(null);
   const lastCuePhase = useRef<BreathPhase | null>(null);
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
-  const unlockOnceRef = useRef(false);
 
   useEffect(() => {
     localStorage.setItem(SOUND_KEY, soundChoice);
   }, [soundChoice]);
-
-  const unlockAudioOnce = () => {
-    if (unlockOnceRef.current) return;
-    unlockOnceRef.current = true;
-    setAudioUnlocked(true);
-  };
 
   useEffect(() => {
     started.current = Date.now();
@@ -90,11 +82,10 @@ export function Practice(props: {
     // Cue only when phase actually changes (avoid repeats).
     if (lastCuePhase.current === phase) return;
     lastCuePhase.current = phase;
-    if (!audioUnlocked) return;
 
     if (phase === "inhale" || phase === "inhale2") playBreathCue("inhale");
     if (phase === "exhale") playBreathCue("exhale");
-  }, [phase, t, audioUnlocked]);
+  }, [phase, t]);
 
   const selectedSoundProfile = useMemo(() => {
     switch (soundChoice) {
@@ -130,10 +121,9 @@ export function Practice(props: {
       stopSound();
       return;
     }
-    if (!audioUnlocked) return;
     void startSound(selectedSoundProfile, volume);
     return () => stopSound();
-  }, [selectedSoundProfile, volume, audioUnlocked]);
+  }, [selectedSoundProfile, volume]);
 
   useEffect(() => {
     if (t === 0) {
@@ -143,7 +133,7 @@ export function Practice(props: {
   }, [t]);
 
   return (
-    <div className="app" onPointerDown={unlockAudioOnce} onTouchStart={unlockAudioOnce}>
+    <div className="app">
       <header className="top">
         <button className="ghost" onClick={onCancel}>
           Назад
@@ -176,11 +166,6 @@ export function Practice(props: {
               Выкл
             </button>
           </div>
-          {!audioUnlocked ? (
-            <div className="muted mtSmall">
-              На телефоне звук включается после первого касания. Нажми по экрану или выбери звук.
-            </div>
-          ) : null}
           <div className="soundGrid">
             <SoundButton id="ocean" activeId={soundChoice} onPick={setSoundChoice} label="Море" icon={IconWave} />
             <SoundButton id="rain" activeId={soundChoice} onPick={setSoundChoice} label="Дождь" icon={IconRain} />

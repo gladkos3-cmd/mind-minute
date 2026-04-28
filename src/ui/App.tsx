@@ -100,6 +100,7 @@ export function App() {
       latestSessions={state.sessions.slice(0, 5)}
       onStart={({ practiceId, durationSec, before }) => {
         hapticLight();
+        void unlockAudio();
         setRoute({ name: "practice", payload: { practiceId, durationSec, before } });
       }}
     />

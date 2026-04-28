@@ -182,7 +182,6 @@ export async function startSound(profile: SoundProfile, volume01: number) {
         n.stop?.();
         n.disconnect?.();
       }
-      void ctx.close();
     } catch {
       // ignore
     }
@@ -517,6 +516,11 @@ export async function playChime(which: "start" | "end") {
 
 export function playBreathCue(kind: "inhale" | "exhale") {
   const { ctx, out } = getSharedAudio();
+  try {
+    void ctx.resume();
+  } catch {
+    // ignore
+  }
   const t = ctx.currentTime;
 
   const osc = ctx.createOscillator();
