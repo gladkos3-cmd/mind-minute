@@ -242,7 +242,7 @@ export async function startSound(profile: SoundProfile, volume01: number) {
       } catch {
         // If autoplay is blocked, we'll fall back below.
         try {
-          node.disconnect();
+          g.disconnect();
         } catch {
           // ignore
         }
@@ -251,6 +251,9 @@ export async function startSound(profile: SoundProfile, volume01: number) {
 
       nodesToStop.push({
         stop: () => {
+          // Important: don't pause shared media when switching sounds.
+          // Old stop() calls may run after a new sound already started.
+          if (seq !== playSeq) return;
           try {
             el.pause();
           } catch {
@@ -259,7 +262,7 @@ export async function startSound(profile: SoundProfile, volume01: number) {
         },
         disconnect: () => {
           try {
-            node.disconnect();
+            g.disconnect();
           } catch {
             // ignore
           }
