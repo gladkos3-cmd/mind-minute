@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { initTelegram, hapticLight } from "../lib/telegram";
 import { bumpStreakIfNeeded, loadState, saveState, type AppState, type SessionRecord } from "../lib/storage";
 import { getPracticeById } from "../content/practices";
+import { stopSound } from "../lib/audio";
 import { Home } from "./screens/Home";
 import { Practice } from "./screens/Practice";
 import { Summary } from "./screens/Summary";
@@ -56,10 +57,12 @@ export function App() {
         before={route.payload.before}
         onCancel={() => {
           hapticLight();
+          stopSound();
           setRoute({ name: "home" });
         }}
         onDone={({ after }) => {
           hapticLight();
+          stopSound();
           const session: SessionRecord = {
             id: crypto.randomUUID(),
             startedAt: Date.now(),

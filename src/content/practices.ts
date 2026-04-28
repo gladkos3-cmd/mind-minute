@@ -12,6 +12,13 @@ export type SoundProfile =
   | { kind: "pinkNoise"; intensity?: number }
   | { kind: "ocean"; intensity?: number }
   | { kind: "rain"; intensity?: number }
+  | { kind: "wind"; intensity?: number }
+  | { kind: "forest"; intensity?: number }
+  | { kind: "birds"; intensity?: number }
+  | { kind: "stream"; intensity?: number }
+  | { kind: "fire"; intensity?: number }
+  | { kind: "space"; intensity?: number }
+  | { kind: "whiteNoise"; intensity?: number }
   | { kind: "tone"; frequencyHz: number; wave?: OscillatorType };
 
 export type PracticeGroupId =

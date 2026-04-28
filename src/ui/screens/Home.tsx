@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { PRACTICE_GROUPS } from "../../content/practices";
 import { recommendPractices } from "../../content/recommend";
 import type { PracticeMode } from "../../content/practices";
@@ -52,17 +52,22 @@ export function Home(props: {
 
       <main className="content">
         <section className="card">
-          <div className="cardTitle">Как ты сейчас?</div>
+          <div className="cardTitle">Как ты себя сейчас чувствуешь?</div>
           <div className="row">
             <div className="muted">Напряжение</div>
             <div className="muted">0–10</div>
           </div>
           <input
-            className="range"
+            className="range rangeStress"
             type="range"
             min={0}
             max={10}
             defaultValue={7}
+            style={
+              {
+                "--stress": String(beforeValue / 10),
+              } as React.CSSProperties
+            }
             onChange={(e) => {
               setBeforeValue(clamp0to10(Number(e.target.value)));
             }}
