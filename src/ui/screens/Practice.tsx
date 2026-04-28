@@ -98,7 +98,7 @@ export function Practice(props: {
     if (lastSpokenPhase.current === phase) return;
     lastSpokenPhase.current = phase;
 
-    const word = phase === "exhale" ? "выдох" : phase === "inhale" || phase === "inhale2" ? "вдох" : null;
+    const word = phase === "exhale" ? "выдыхаем" : phase === "inhale" || phase === "inhale2" ? "вдыхаем" : null;
     if (!word) return;
     speakSoftFemaleRu(word);
   }, [phase, t, voiceEnabled]);
@@ -434,13 +434,13 @@ function IconMeditator(p: { className?: string }) {
 function labelPhase(p: BreathPhase) {
   switch (p) {
     case "inhale":
-      return "Вдох";
+      return "Вдыхаем";
     case "inhale2":
       return "Ещё вдох";
     case "hold":
       return "Пауза";
     case "exhale":
-      return "Выдох";
+      return "Выдыхаем";
   }
 }
 

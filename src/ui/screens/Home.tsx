@@ -87,7 +87,7 @@ export function Home(props: {
 
         <section className="card">
           <div className="cardTitle">Кейс</div>
-          <div className="row">
+          <div className="chipScroller">
             {MODES.map((m) => (
               <button
                 key={m.id}
@@ -98,7 +98,7 @@ export function Home(props: {
               </button>
             ))}
           </div>
-          <div className="row mt">
+          <div className="chipScroller mt">
             {durations.map((d) => (
               <button
                 key={d.sec}
