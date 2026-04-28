@@ -515,3 +515,28 @@ export async function playChime(which: "start" | "end") {
   }, 1100);
 }
 
+export function playBreathCue(kind: "inhale" | "exhale") {
+  const { ctx, out } = getSharedAudio();
+  const t = ctx.currentTime;
+
+  const osc = ctx.createOscillator();
+  osc.type = "sine";
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+
+  const base = kind === "inhale" ? 523.25 : 392.0; // C5 vs G4
+  const end = kind === "inhale" ? 659.25 : 329.63; // E5 vs E4-ish
+  const dur = 0.12;
+
+  osc.frequency.setValueAtTime(base, t);
+  osc.frequency.exponentialRampToValueAtTime(end, t + dur);
+
+  g.gain.exponentialRampToValueAtTime(0.05, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+  osc.connect(g).connect(out);
+  osc.start(t);
+  osc.stop(t + dur + 0.02);
+}
+
