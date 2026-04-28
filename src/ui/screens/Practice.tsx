@@ -40,6 +40,8 @@ export function Practice(props: {
   const [voiceEnabled, setVoiceEnabled] = useState(() => localStorage.getItem(VOICE_KEY) !== "0");
   const started = useRef<number | null>(null);
   const lastSpokenPhase = useRef<BreathPhase | null>(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const unlockOnceRef = useRef(false);
 
   useEffect(() => {
     localStorage.setItem(SOUND_KEY, soundChoice);
@@ -48,6 +50,12 @@ export function Practice(props: {
   useEffect(() => {
     localStorage.setItem(VOICE_KEY, voiceEnabled ? "1" : "0");
   }, [voiceEnabled]);
+
+  const unlockAudioOnce = () => {
+    if (unlockOnceRef.current) return;
+    unlockOnceRef.current = true;
+    setAudioUnlocked(true);
+  };
 
   useEffect(() => {
     started.current = Date.now();
@@ -129,9 +137,10 @@ export function Practice(props: {
       stopSound();
       return;
     }
+    if (!audioUnlocked) return;
     void startSound(selectedSoundProfile, volume);
     return () => stopSound();
-  }, [selectedSoundProfile, volume]);
+  }, [selectedSoundProfile, volume, audioUnlocked]);
 
   useEffect(() => {
     if (t === 0) {
@@ -141,7 +150,7 @@ export function Practice(props: {
   }, [t]);
 
   return (
-    <div className="app">
+    <div className="app" onPointerDown={unlockAudioOnce} onTouchStart={unlockAudioOnce}>
       <header className="top">
         <button className="ghost" onClick={onCancel}>
           Назад
@@ -174,6 +183,11 @@ export function Practice(props: {
               Выкл
             </button>
           </div>
+          {!audioUnlocked ? (
+            <div className="muted mtSmall">
+              На телефоне звук включается после первого касания. Нажми по экрану или выбери звук.
+            </div>
+          ) : null}
           <div className="soundGrid">
             <SoundButton id="ocean" activeId={soundChoice} onPick={setSoundChoice} label="Море" icon={IconWave} />
             <SoundButton id="rain" activeId={soundChoice} onPick={setSoundChoice} label="Дождь" icon={IconRain} />

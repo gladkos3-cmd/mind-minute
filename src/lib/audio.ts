@@ -1,5 +1,11 @@
 import type { SoundProfile } from "../content/practices";
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 type Playing = {
   ctx: AudioContext;
   master: GainNode;
@@ -9,6 +15,11 @@ type Playing = {
 let current: Playing | null = null;
 let playSeq = 0;
 const bufferCache = new Map<string, Promise<AudioBuffer>>();
+
+function createAudioContext(): AudioContext {
+  const Ctx = window.AudioContext ?? window.webkitAudioContext;
+  return new Ctx();
+}
 
 function createNoiseBuffer(ctx: AudioContext, seconds: number) {
   const sampleRate = ctx.sampleRate;
@@ -96,7 +107,7 @@ export async function startSound(profile: SoundProfile, volume01: number) {
   if (profile.kind === "none") return;
 
   const seq = ++playSeq;
-  const ctx = new AudioContext();
+  const ctx = createAudioContext();
   const master = ctx.createGain();
   master.gain.value = 0;
   master.connect(ctx.destination);
@@ -428,7 +439,7 @@ export async function startSound(profile: SoundProfile, volume01: number) {
 }
 
 export async function playChime(which: "start" | "end") {
-  const ctx = new AudioContext();
+  const ctx = createAudioContext();
   try {
     await ctx.resume();
   } catch {
