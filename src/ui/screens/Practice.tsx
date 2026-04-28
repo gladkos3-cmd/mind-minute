@@ -18,6 +18,7 @@ type SoundChoiceId =
   | "tone";
 
 const SOUND_KEY = "mind-minute:soundChoice:v1";
+const VOICE_KEY = "mind-minute:voiceCues:v1";
 
 export function Practice(props: {
   practice: PracticeDefinition;
@@ -36,11 +37,17 @@ export function Practice(props: {
     if (!raw) return "ocean";
     return (raw as SoundChoiceId) ?? "ocean";
   });
+  const [voiceEnabled, setVoiceEnabled] = useState(() => localStorage.getItem(VOICE_KEY) !== "0");
   const started = useRef<number | null>(null);
+  const lastSpokenPhase = useRef<BreathPhase | null>(null);
 
   useEffect(() => {
     localStorage.setItem(SOUND_KEY, soundChoice);
   }, [soundChoice]);
+
+  useEffect(() => {
+    localStorage.setItem(VOICE_KEY, voiceEnabled ? "1" : "0");
+  }, [voiceEnabled]);
 
   useEffect(() => {
     started.current = Date.now();
@@ -74,6 +81,19 @@ export function Practice(props: {
     }, 1000);
     return () => window.clearInterval(id);
   }, [practice.breath]);
+
+  useEffect(() => {
+    if (!voiceEnabled) return;
+    if (t === 0) return;
+
+    // Speak only when phase actually changes (avoid repeats).
+    if (lastSpokenPhase.current === phase) return;
+    lastSpokenPhase.current = phase;
+
+    const word = phase === "exhale" ? "выдох" : phase === "inhale" || phase === "inhale2" ? "вдох" : null;
+    if (!word) return;
+    speakSoftFemaleRu(word);
+  }, [phase, t, voiceEnabled]);
 
   const selectedSoundProfile = useMemo(() => {
     switch (soundChoice) {
@@ -176,6 +196,18 @@ export function Practice(props: {
             disabled={soundChoice === "off"}
           />
           <div className="muted">Громкость: {Math.round(volume * 100)}%</div>
+        </section>
+
+        <section className="card">
+          <div className="row">
+            <div className="cardTitle" style={{ margin: 0 }}>
+              Голос
+            </div>
+            <button className={`chip ${voiceEnabled ? "chipActive" : ""}`} onClick={() => setVoiceEnabled((v) => !v)}>
+              {voiceEnabled ? "Вкл" : "Выкл"}
+            </button>
+          </div>
+          <div className="muted mtSmall">Подсказывает «вдох / выдох» поверх музыки (если доступен голос в браузере).</div>
         </section>
 
         {t === 0 ? (
@@ -402,5 +434,35 @@ function formatTime(sec: number) {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function speakSoftFemaleRu(text: string) {
+  const s = window.speechSynthesis;
+  if (!s) return;
+  try {
+    s.cancel();
+  } catch {
+    // ignore
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ru-RU";
+  u.rate = 0.95;
+  u.pitch = 1.1;
+  u.volume = 0.55;
+
+  const voices = s.getVoices?.() ?? [];
+  const ru = voices.filter((v) => (v.lang || "").toLowerCase().startsWith("ru"));
+  const pick =
+    ru.find((v) => /female|woman|anna|alena|milena|irina|tatyana|tatiana/i.test(v.name)) ??
+    ru.find((v) => /google|microsoft/i.test(v.name)) ??
+    ru[0] ??
+    voices[0];
+  if (pick) u.voice = pick;
+
+  try {
+    s.speak(u);
+  } catch {
+    // ignore
+  }
 }
 
