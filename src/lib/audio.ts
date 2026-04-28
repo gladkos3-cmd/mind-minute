@@ -17,6 +17,8 @@ let playSeq = 0;
 const bufferCache = new Map<string, Promise<AudioBuffer>>();
 let sharedCtx: AudioContext | null = null;
 let sharedOut: GainNode | null = null;
+let sharedMediaEl: HTMLAudioElement | null = null;
+let sharedMediaNode: MediaElementAudioSourceNode | null = null;
 
 function createAudioContext(): AudioContext {
   const Ctx = window.AudioContext ?? window.webkitAudioContext;
@@ -31,6 +33,29 @@ function getSharedAudio() {
     sharedOut.connect(sharedCtx.destination);
   }
   return { ctx: sharedCtx, out: sharedOut! };
+}
+
+function getSharedMedia(ctx: AudioContext) {
+  if (!sharedMediaEl) {
+    sharedMediaEl = new Audio();
+    sharedMediaEl.preload = "auto";
+    sharedMediaEl.loop = true;
+    try {
+      (sharedMediaEl as HTMLMediaElement).crossOrigin = "anonymous";
+    } catch {
+      // ignore
+    }
+    try {
+      // @ts-ignore - playsInline exists on iOS Safari
+      sharedMediaEl.playsInline = true;
+    } catch {
+      // ignore
+    }
+  }
+  if (!sharedMediaNode) {
+    sharedMediaNode = ctx.createMediaElementSource(sharedMediaEl);
+  }
+  return { el: sharedMediaEl, node: sharedMediaNode };
 }
 
 export async function unlockAudio() {
@@ -198,27 +223,26 @@ export async function startSound(profile: SoundProfile, volume01: number) {
   if (url) {
     try {
       // iOS Safari can be picky about decodeAudioData() for some MP3 encodings.
-      // Prefer an <audio> element routed into WebAudio when possible.
-      const el = new Audio(url);
-      el.loop = true;
-      el.preload = "auto";
-      try {
-        (el as HTMLMediaElement).crossOrigin = "anonymous";
-      } catch {
-        // ignore
+      // Use a single shared <audio> element routed into WebAudio for maximum compatibility.
+      const { el, node } = getSharedMedia(ctx);
+      if (el.src !== url) {
+        el.src = url;
+        try {
+          el.load();
+        } catch {
+          // ignore
+        }
       }
-
-      const media = ctx.createMediaElementSource(el);
       const g = ctx.createGain();
       g.gain.value = (0.18 + intensity * 0.22) * v;
-      media.connect(g).connect(master);
+      node.connect(g).connect(master);
 
       try {
         await el.play();
       } catch {
         // If autoplay is blocked, we'll fall back below.
         try {
-          media.disconnect();
+          node.disconnect();
         } catch {
           // ignore
         }
@@ -235,7 +259,7 @@ export async function startSound(profile: SoundProfile, volume01: number) {
         },
         disconnect: () => {
           try {
-            media.disconnect();
+            node.disconnect();
           } catch {
             // ignore
           }
