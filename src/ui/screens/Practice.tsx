@@ -30,7 +30,6 @@ export function Practice(props: {
   const [t, setT] = useState(durationSec);
   const [phase, setPhase] = useState<BreathPhase>("inhale");
   const [after, setAfter] = useState(4);
-  const [volume, setVolume] = useState(0.6);
   const [soundChoice, setSoundChoice] = useState<SoundChoiceId>(() => {
     const raw = localStorage.getItem(SOUND_KEY);
     if (!raw) return "ocean";
@@ -121,9 +120,9 @@ export function Practice(props: {
       stopSound();
       return;
     }
-    void startSound(selectedSoundProfile, volume);
+    void startSound(selectedSoundProfile, 1);
     return () => stopSound();
-  }, [selectedSoundProfile, volume]);
+  }, [selectedSoundProfile]);
 
   useEffect(() => {
     if (t === 0) {
@@ -178,16 +177,6 @@ export function Practice(props: {
             <SoundButton id="pink" activeId={soundChoice} onPick={setSoundChoice} label="Розовый" icon={IconNoise} />
             <SoundButton id="white" activeId={soundChoice} onPick={setSoundChoice} label="Белый" icon={IconNoise} />
           </div>
-          <input
-            className="range"
-            type="range"
-            min={0}
-            max={100}
-            value={Math.round(volume * 100)}
-            onChange={(e) => setVolume(Number(e.target.value) / 100)}
-            disabled={soundChoice === "off"}
-          />
-          <div className="muted">Громкость: {Math.round(volume * 100)}%</div>
         </section>
 
         {t === 0 ? (
