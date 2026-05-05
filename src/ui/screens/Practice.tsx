@@ -29,6 +29,8 @@ export function Practice(props: {
   const { practice, durationSec, onCancel, onDone } = props;
   const [t, setT] = useState(durationSec);
   const [phase, setPhase] = useState<BreathPhase>("inhale");
+  const [phaseLeft, setPhaseLeft] = useState(0);
+  const [phaseTotal, setPhaseTotal] = useState(1);
   const [after, setAfter] = useState(4);
   const [soundChoice, setSoundChoice] = useState<SoundChoiceId>(() => {
     const raw = localStorage.getItem(SOUND_KEY);
@@ -62,13 +64,18 @@ export function Practice(props: {
     let idx = 0;
     let left = seq[0].sec;
     setPhase(seq[0].p);
+    setPhaseLeft(left);
+    setPhaseTotal(left);
 
     const id = window.setInterval(() => {
       left -= 1;
+      setPhaseLeft(Math.max(0, left));
       if (left <= 0) {
         idx = (idx + 1) % seq.length;
         left = seq[idx].sec;
         setPhase(seq[idx].p);
+        setPhaseLeft(left);
+        setPhaseTotal(left);
         hapticLight();
       }
     }, 1000);
@@ -131,6 +138,12 @@ export function Practice(props: {
     }
   }, [t]);
 
+  const phaseProgress01 = useMemo(() => {
+    const total = Math.max(1, phaseTotal);
+    const done = total - Math.max(0, phaseLeft);
+    return Math.max(0, Math.min(1, done / total));
+  }, [phaseLeft, phaseTotal]);
+
   return (
     <div className="app">
       <header className="top">
@@ -152,6 +165,13 @@ export function Practice(props: {
               <IconMeditator className="orbMeditatorIcon" />
             </div>
             <div className="orbText">{labelPhase(phase)}</div>
+          </div>
+          <div className="breathMeter" aria-hidden="true">
+            <div className="breathMeterFill" style={{ width: `${Math.round(phaseProgress01 * 100)}%` }} />
+          </div>
+          <div className="breathMeterMeta">
+            <div className="muted">{labelPhase(phase)}</div>
+            <div className="muted">{phaseLeft}s</div>
           </div>
           <div className="practiceNote mtSmall">Если хочется — просто наблюдай дыхание, без оценок.</div>
         </section>
