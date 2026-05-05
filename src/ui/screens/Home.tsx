@@ -197,7 +197,7 @@ export function Home(props: {
                   setSelectedDuration(sec);
                 }}
               />
-              <div className="muted">От 30 секунд до 30 минут. Для практики возьмём ближайшую доступную длительность.</div>
+              <div className="muted">От 30 секунд до 30 минут.</div>
             </div>
           ) : null}
           <div className="muted mtSmall">
@@ -212,7 +212,7 @@ export function Home(props: {
               <button
                 key={p.id}
                 className="listRow listRowBtn"
-                onClick={() => onStart({ practiceId: p.id, durationSec: pickDuration(p.durationsSec, selectedDuration), before: beforeValue })}
+                onClick={() => onStart({ practiceId: p.id, durationSec: selectedDuration, before: beforeValue })}
               >
                 <div className="listMain">
                   <div className="listTitle">
@@ -220,7 +220,7 @@ export function Home(props: {
                     {breathDigits(p) ? ` (${breathDigits(p)})` : ""}
                   </div>
                   <div className="listSub">
-                    {p.title} · {formatDuration(pickDuration(p.durationsSec, selectedDuration))}
+                    {p.title} · {formatDuration(selectedDuration)}
                   </div>
                 </div>
                 <div className="delta">▶</div>
