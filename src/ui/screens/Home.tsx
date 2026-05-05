@@ -88,19 +88,18 @@ export function Home(props: {
         </section>
 
         <section className="card">
-          <div className="cardTitle">Кейс</div>
-          <div className="chipScroller">
+          <div className="cardTitle">Цель</div>
+          <div className="grid2">
             {MODES.map((m) => (
-              <button
-                key={m.id}
-                className={`chip ${m.id === mode ? "chipActive" : ""}`}
-                onClick={() => setMode(m.id)}
-              >
-                {m.title}
+              <button key={m.id} className={`mode ${m.id === mode ? "modeActive" : ""}`} onClick={() => setMode(m.id)} type="button">
+                <div className="modeTitle">{m.title}</div>
+                <div className="modeHint">{m.hint}</div>
               </button>
             ))}
           </div>
-          <div className="chipScroller mt">
+
+          <div className="cardTitle mt">Время</div>
+          <div className="chipScroller">
             {durations.map((d) => (
               <button
                 key={d.sec}
@@ -109,6 +108,7 @@ export function Home(props: {
                   setCustomOpen(false);
                   setSelectedDuration(d.sec);
                 }}
+                type="button"
               >
                 {d.label}
               </button>

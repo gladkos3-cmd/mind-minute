@@ -98,6 +98,7 @@ a{color:inherit;text-decoration:none}
 .mode:hover{border-color:rgba(110,231,255,.28)}
 .modeTitle{font-weight:800}
 .modeHint{font-size:12px; color:var(--muted); margin-top:2px}
+.modeActive{border-color:rgba(110,231,255,.35); box-shadow:0 0 0 2px rgba(110,231,255,.08) inset}
 
 .chip{appearance:none; border:1px solid var(--stroke); background:rgba(255,255,255,.03); color:var(--text); padding:10px 12px; border-radius:999px; cursor:pointer; font-weight:700; font-size:13px}
 .chipActive{border-color:rgba(110,231,255,.35); box-shadow:0 0 0 2px rgba(110,231,255,.08) inset}
