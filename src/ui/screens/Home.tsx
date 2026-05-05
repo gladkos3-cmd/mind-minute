@@ -33,6 +33,8 @@ export function Home(props: {
   const { streakCount, latestSessions, onStart } = props;
   const [beforeValue, setBeforeValue] = useState(7);
   const [selectedDuration, setSelectedDuration] = useState(90);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customDurationSec, setCustomDurationSec] = useState(120);
   const [mode, setMode] = useState<PracticeMode>("calm");
   const durations = useMemo(() => {
     if (mode === "sleep") return [...DURATIONS_BASE, DURATION_SLEEP_10MIN];
@@ -104,13 +106,100 @@ export function Home(props: {
                 key={d.sec}
                 className={`chip ${d.sec === selectedDuration ? "chipActive" : ""}`}
                 onClick={() => {
+                  setCustomOpen(false);
                   setSelectedDuration(d.sec);
                 }}
               >
                 {d.label}
               </button>
             ))}
+            <button
+              className={`chip ${customOpen ? "chipActive" : ""}`}
+              onClick={() => {
+                setCustomOpen((v) => !v);
+                setSelectedDuration(customDurationSec);
+              }}
+              type="button"
+            >
+              Своё {formatDuration(customDurationSec)}
+            </button>
           </div>
+          {customOpen ? (
+            <div className="timeCustom">
+              <div className="timeCustomRow">
+                <div className="timeInputWrap">
+                  <div className="timeLabel">мин</div>
+                  <input
+                    className="timeInput"
+                    type="number"
+                    min={0}
+                    max={60}
+                    value={Math.floor(customDurationSec / 60)}
+                    onChange={(e) => {
+                      const m = clampInt(Number(e.target.value), 0, 60);
+                      const s = customDurationSec % 60;
+                      const sec = clampInt(m * 60 + s, 30, 1800);
+                      setCustomDurationSec(sec);
+                      setSelectedDuration(sec);
+                    }}
+                  />
+                </div>
+                <div className="timeInputWrap">
+                  <div className="timeLabel">сек</div>
+                  <input
+                    className="timeInput"
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={customDurationSec % 60}
+                    onChange={(e) => {
+                      const m = Math.floor(customDurationSec / 60);
+                      const s = clampInt(Number(e.target.value), 0, 59);
+                      const sec = clampInt(m * 60 + s, 30, 1800);
+                      setCustomDurationSec(sec);
+                      setSelectedDuration(sec);
+                    }}
+                  />
+                </div>
+                <button
+                  className="chip"
+                  type="button"
+                  onClick={() => {
+                    const sec = clampInt(customDurationSec - 30, 30, 1800);
+                    setCustomDurationSec(sec);
+                    setSelectedDuration(sec);
+                  }}
+                >
+                  −30с
+                </button>
+                <button
+                  className="chip"
+                  type="button"
+                  onClick={() => {
+                    const sec = clampInt(customDurationSec + 30, 30, 1800);
+                    setCustomDurationSec(sec);
+                    setSelectedDuration(sec);
+                  }}
+                >
+                  +30с
+                </button>
+              </div>
+              <input
+                className="range"
+                type="range"
+                min={30}
+                max={1800}
+                step={15}
+                value={customDurationSec}
+                onChange={(e) => {
+                  const sec = clampInt(Number(e.target.value), 30, 1800);
+                  setCustomDurationSec(sec);
+                  setSelectedDuration(sec);
+                }}
+              />
+              <div className="muted">От 30 секунд до 30 минут. Для практики возьмём ближайшую доступную длительность.</div>
+            </div>
+          ) : null}
           <div className="muted mtSmall">
             Мы подбираем практику под кейс, уровень напряжения и время суток.
           </div>
@@ -187,6 +276,12 @@ function formatDuration(durationSec: number) {
   if (durationSec < 120) return `${durationSec} сек`;
   const min = Math.round(durationSec / 60);
   return `${min} мин`;
+}
+
+function clampInt(x: number, min: number, max: number) {
+  if (!Number.isFinite(x)) return min;
+  const v = Math.round(x);
+  return Math.max(min, Math.min(max, v));
 }
 
 function groupTitle(groupId: string) {
