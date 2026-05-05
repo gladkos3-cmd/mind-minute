@@ -32,6 +32,7 @@ export function Practice(props: {
   const [phaseLeft, setPhaseLeft] = useState(0);
   const [phaseTotal, setPhaseTotal] = useState(1);
   const [after, setAfter] = useState(4);
+  const [soundOpen, setSoundOpen] = useState(false);
   const [soundChoice, setSoundChoice] = useState<SoundChoiceId>(() => {
     const raw = localStorage.getItem(SOUND_KEY);
     if (!raw) return "ocean";
@@ -181,22 +182,39 @@ export function Practice(props: {
             <div className="cardTitle" style={{ margin: 0 }}>
               Звук
             </div>
-            <button className={`chip ${soundChoice !== "off" ? "chipActive" : ""}`} onClick={() => setSoundChoice("off")}>
-              Выкл
-            </button>
+            <div className="row" style={{ justifyContent: "flex-end" }}>
+              <button className="chip" type="button" onClick={() => setSoundOpen((v) => !v)}>
+                {soundOpen ? "Скрыть" : "Выбрать"}
+              </button>
+              <button
+                className={`chip ${soundChoice !== "off" ? "chipActive" : ""}`}
+                type="button"
+                onClick={() => {
+                  setSoundChoice("off");
+                  setSoundOpen(false);
+                }}
+              >
+                Выкл
+              </button>
+            </div>
           </div>
-          <div className="soundGrid">
-            <SoundButton id="ocean" activeId={soundChoice} onPick={setSoundChoice} label="Море" icon={IconWave} />
-            <SoundButton id="rain" activeId={soundChoice} onPick={setSoundChoice} label="Дождь" icon={IconRain} />
-            <SoundButton id="wind" activeId={soundChoice} onPick={setSoundChoice} label="Ветер" icon={IconWind} />
-            <SoundButton id="forest" activeId={soundChoice} onPick={setSoundChoice} label="Лес" icon={IconForest} />
-            <SoundButton id="birds" activeId={soundChoice} onPick={setSoundChoice} label="Птицы" icon={IconBird} />
-            <SoundButton id="stream" activeId={soundChoice} onPick={setSoundChoice} label="Ручей" icon={IconStream} />
-            <SoundButton id="fire" activeId={soundChoice} onPick={setSoundChoice} label="Огонь" icon={IconFire} />
-            <SoundButton id="space" activeId={soundChoice} onPick={setSoundChoice} label="Космос" icon={IconSpace} />
-            <SoundButton id="pink" activeId={soundChoice} onPick={setSoundChoice} label="Розовый" icon={IconNoise} />
-            <SoundButton id="white" activeId={soundChoice} onPick={setSoundChoice} label="Белый" icon={IconNoise} />
+          <div className="soundSummary mtSmall">
+            <div className="muted">Сейчас: {labelSoundChoice(soundChoice)}</div>
           </div>
+          {soundOpen ? (
+            <div className="soundGrid mtSmall">
+              <SoundButton id="ocean" activeId={soundChoice} onPick={setSoundChoice} label="Море" icon={IconWave} />
+              <SoundButton id="rain" activeId={soundChoice} onPick={setSoundChoice} label="Дождь" icon={IconRain} />
+              <SoundButton id="wind" activeId={soundChoice} onPick={setSoundChoice} label="Ветер" icon={IconWind} />
+              <SoundButton id="forest" activeId={soundChoice} onPick={setSoundChoice} label="Лес" icon={IconForest} />
+              <SoundButton id="birds" activeId={soundChoice} onPick={setSoundChoice} label="Птицы" icon={IconBird} />
+              <SoundButton id="stream" activeId={soundChoice} onPick={setSoundChoice} label="Ручей" icon={IconStream} />
+              <SoundButton id="fire" activeId={soundChoice} onPick={setSoundChoice} label="Огонь" icon={IconFire} />
+              <SoundButton id="space" activeId={soundChoice} onPick={setSoundChoice} label="Космос" icon={IconSpace} />
+              <SoundButton id="pink" activeId={soundChoice} onPick={setSoundChoice} label="Розовый" icon={IconNoise} />
+              <SoundButton id="white" activeId={soundChoice} onPick={setSoundChoice} label="Белый" icon={IconNoise} />
+            </div>
+          ) : null}
         </section>
 
         {t === 0 ? (
@@ -416,6 +434,35 @@ function labelPhase(p: BreathPhase) {
       return "Пауза";
     case "exhale":
       return "Выдыхаем";
+  }
+}
+
+function labelSoundChoice(id: SoundChoiceId) {
+  switch (id) {
+    case "off":
+      return "выключен";
+    case "ocean":
+      return "Море";
+    case "rain":
+      return "Дождь";
+    case "wind":
+      return "Ветер";
+    case "forest":
+      return "Лес";
+    case "birds":
+      return "Птицы";
+    case "stream":
+      return "Ручей";
+    case "fire":
+      return "Огонь";
+    case "space":
+      return "Космос";
+    case "pink":
+      return "Розовый шум";
+    case "white":
+      return "Белый шум";
+    case "tone":
+      return "Тон";
   }
 }
 
