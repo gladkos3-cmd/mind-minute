@@ -1,4 +1,5 @@
 import { Bot, InlineKeyboard, webhookCallback } from "grammy";
+import { getPremiumUntilMs, setPremiumUntilMs } from "./_lib/premiumStore";
 
 function requireEnv(name: string) {
   const v = process.env[name];
@@ -23,6 +24,31 @@ bot.command("start", async (ctx) => {
   }
   const kb = new InlineKeyboard().webApp("Открыть Mind Minute", webAppUrl);
   await ctx.reply("Готово. Открывай приложение:", { reply_markup: kb });
+});
+
+bot.on("pre_checkout_query", async (ctx) => {
+  // Always answer to avoid payment hanging.
+  await ctx.answerPreCheckoutQuery(true);
+});
+
+bot.on("message:successful_payment", async (ctx) => {
+  try {
+    const payloadRaw = ctx.message.successful_payment.invoice_payload;
+    const payload = JSON.parse(payloadRaw) as { sku?: string; userId?: number };
+    const userId = Number(payload.userId ?? ctx.from?.id);
+    const sku = String(payload.sku ?? "");
+    const days = sku === "premium_year" ? 365 : 30;
+
+    const cur = await getPremiumUntilMs(userId);
+    const base = Math.max(Date.now(), cur);
+    const premiumUntilMs = base + days * 24 * 60 * 60 * 1000;
+    await setPremiumUntilMs(userId, premiumUntilMs);
+
+    await ctx.reply("Premium активирован. Спасибо! Можно возвращаться в приложение.");
+  } catch {
+    // best effort
+    await ctx.reply("Платёж получен. Если Premium не включился — напиши /start.");
+  }
 });
 
 bot.on("message:text", async (ctx) => {

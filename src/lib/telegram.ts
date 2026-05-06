@@ -3,6 +3,7 @@ type TelegramWebApp = {
   expand: () => void;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  openInvoice?: (url: string, cb?: (status: "paid" | "cancelled" | "failed" | "pending") => void) => void;
   HapticFeedback?: {
     impactOccurred: (style: "light" | "medium" | "heavy" | "rigid" | "soft") => void;
     notificationOccurred: (type: "error" | "success" | "warning") => void;
@@ -21,6 +22,21 @@ declare global {
 
 export function getTelegramWebApp(): TelegramWebApp | null {
   return window.Telegram?.WebApp ?? null;
+}
+
+export function getTelegramInitData(): string {
+  return getTelegramWebApp()?.initData ?? "";
+}
+
+export function openTelegramInvoice(invoiceLink: string) {
+  const tg = getTelegramWebApp();
+  return new Promise<"paid" | "cancelled" | "failed" | "pending">((resolve) => {
+    try {
+      tg?.openInvoice?.(invoiceLink, (status) => resolve(status));
+    } catch {
+      resolve("failed");
+    }
+  });
 }
 
 export function initTelegram(): { isTelegram: boolean } {
