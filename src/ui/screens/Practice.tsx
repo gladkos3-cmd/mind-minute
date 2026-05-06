@@ -40,6 +40,7 @@ export function Practice(props: {
   });
   const started = useRef<number | null>(null);
   const lastCuePhase = useRef<BreathPhase | null>(null);
+  const breathIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     localStorage.setItem(SOUND_KEY, soundChoice);
@@ -80,6 +81,7 @@ export function Practice(props: {
         hapticLight();
       }
     }, 1000);
+    breathIntervalRef.current = id;
     return () => window.clearInterval(id);
   }, [practice.breath]);
 
@@ -136,6 +138,15 @@ export function Practice(props: {
     if (t === 0) {
       stopSound();
       void playChime("end");
+
+      // Stop breath cycle + freeze UI.
+      if (breathIntervalRef.current) {
+        window.clearInterval(breathIntervalRef.current);
+        breathIntervalRef.current = null;
+      }
+      setPhaseLeft(0);
+      setPhaseTotal(1);
+      setPhase("hold");
     }
   }, [t]);
 
@@ -161,7 +172,7 @@ export function Practice(props: {
       <main className="content">
         <section className="card">
           <div className="practiceInstruction">{practice.instruction}</div>
-          <div className={`orb orb-${phase}`}>
+          <div className={`orb orb-${phase} ${t === 0 ? "orbEnded" : ""}`}>
             <div className="orbMeditator" aria-hidden="true">
               <IconMeditator className="orbMeditatorIcon" />
             </div>

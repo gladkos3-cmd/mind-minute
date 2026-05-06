@@ -210,6 +210,7 @@ a{color:inherit;text-decoration:none}
 .orb-inhale{transform:scale(1.02)}
 .orb-hold{transform:scale(1.02)}
 .orb-exhale{transform:scale(.86)}
+.orbEnded{transform:scale(.92)!important; transition:none!important}
 
 .practiceInstruction{
   font-size: 14px;
