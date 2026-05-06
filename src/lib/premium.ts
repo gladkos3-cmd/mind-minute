@@ -1,6 +1,8 @@
 export type PremiumSku = "premium_month" | "premium_year";
 
-export const PREMIUM_FREE_MAX_SEC = 180;
+// Temporary: Premium is disabled while we grow audience.
+// Set high enough so no duration in the UI triggers the paywall.
+export const PREMIUM_FREE_MAX_SEC = 24 * 60 * 60;
 
 export const PREMIUM_PRODUCTS: Array<{
   sku: PremiumSku;
